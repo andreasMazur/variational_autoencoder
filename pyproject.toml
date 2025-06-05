@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "variational_autoencoder"
+version = "0.0.1"
+dependencies = [
+    "tensorflow",
+    "keras"
+]
+authors = [{name = "Andreas Mazur"}]
+maintainers = [{name = "Andreas Mazur"}]
+description = "A light TensorFlow meta-class for variational autoencoder. "
+license = {file = "LICENSE"}
+readme = "README.md"
+
+[project.optional-dependencies]
+cuda = [
+    "tensorflow[and-cuda]",
+    "keras"
+]
