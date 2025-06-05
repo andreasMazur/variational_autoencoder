@@ -6,7 +6,6 @@ This repository provides a simple implementation of a Variational Autoencoder (V
 ## Install
 
 ```bash
-  pip install tensorflow[and-cuda] keras
   pip install git+https://github.com/andreasMazur/variational_autoencoder.git/@main
 ```
 
