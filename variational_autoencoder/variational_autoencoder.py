@@ -6,6 +6,23 @@ import keras
 
 
 class VariationalAutoEncoder(keras.models.Model):
+    """Variational Autoencoder (VAE) for unsupervised Machine Learning.
+
+    Publication that introduces the VAE:
+    Kingma, Diederik P., and Max Welling. "Auto-encoding variational bayes." 20 Dec. 2013,
+
+    Attributes
+    ----------
+    encoder : keras.models.Model
+        The encoder model that encodes input features and associated labels into a latent space.
+    latent_dim : int
+        The dimension of the latent space.
+    decoder : keras.models.Model
+        The decoder model that decodes latent representations together with a label back into the original feature
+        space.
+    beta : float
+        A regularization coefficient for the KL-divergence loss.
+    """
     def __init__(self, encoder, latent_dim, decoder, beta=1., *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Initialize encoder and decoder

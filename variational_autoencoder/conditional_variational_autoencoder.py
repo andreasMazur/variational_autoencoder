@@ -39,6 +39,10 @@ def concat_labels_to_features(features, labels):
 class CVariationalAutoEncoder(keras.models.Model):
     """Conditional Variational Autoencoder (cVAE) with classifier for semi-supervised Machine Learning.
 
+    Publication that introduces the cVAE:
+    Kingma, Durk P., et al. "Semi-supervised learning with deep generative models."
+    Advances in neural information processing systems 27 (2014).
+
     Attributes
     ----------
     encoder : keras.models.Model
@@ -54,8 +58,6 @@ class CVariationalAutoEncoder(keras.models.Model):
         A regularization coefficient for the classification models loss.
     beta : float
         A regularization coefficient for the KL-divergence loss.
-    warmup_steps : int
-        The amount of training steps before the model starts to pay attention to the unsupervised loss.
     """
     def __init__(self,
                  encoder,
