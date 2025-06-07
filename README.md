@@ -110,7 +110,7 @@ test_images = test_images / 255.0
 
 # Fit the VAE (training-parameters are mockup numbers)
 # Hint: Missing labels should be filled with -1.
-# This indicates the VAE to use the classifier for the associated features..
+# This indicates the VAE to use the classifier for the associated features.
 vae.fit(
     x=train_images,
     y=train_labels,
