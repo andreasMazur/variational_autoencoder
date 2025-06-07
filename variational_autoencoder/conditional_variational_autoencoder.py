@@ -225,7 +225,7 @@ class CVariationalAutoEncoder(keras.models.Model):
         clf_loss = self.classification_loss(labels, predictions)
         self.clf_loss_tracker.update_state(clf_loss)
 
-        # 3.) Combine loss
+        # 4.) Combine loss
         total_loss = labeled_loss + self.alpha * clf_loss + unlabeled_loss
         self.total_loss_tracker.update_state(total_loss)
 
