@@ -1,7 +1,7 @@
 # Variational Autoencoder (VAE) with TensorFlow
 
-This repository provides a simple implementation of a Variational Autoencoder (VAE) using TensorFlow and Keras.
-
+This repository provides simple implementations for Variational Autoencoder (VAE) and conditional VAEs (cVAE) using
+TensorFlow and Keras.
 
 ## Install
 
