@@ -36,7 +36,8 @@ decoder = keras.Sequential([
 vae = VariationalAutoEncoder(
     encoder=encoder,
     latent_dim=latent_dim,
-    decoder=decoder
+    decoder=decoder,
+    beta=1.0  # Weight for the KL-divergence loss
 )
 
 # Leave the 'loss'-parameter blank, as the VAE loss (negative ELBO) is calculated 
