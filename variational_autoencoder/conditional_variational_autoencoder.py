@@ -1,10 +1,9 @@
 from variational_autoencoder.losses.kl_divergence import KLDivergence
 from variational_autoencoder.losses.reconstruction_loss import ReconstructionLoss
+from variational_autoencoder.util import compute_entropy
 
 import tensorflow as tf
 import keras
-
-from variational_autoencoder.util import compute_entropy
 
 
 def divide_data(features, labels):
