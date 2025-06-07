@@ -15,7 +15,7 @@ class TestVAE(unittest.TestCase):
         # Initialize encoder architecture
         latent_dim = 64
         encoder = keras.Sequential([
-            keras.layers.Flatten(input_shape=(28, 28)),
+            keras.layers.Flatten(),
             keras.layers.Dense(128, activation="relu"),
             keras.layers.Dense(latent_dim, activation="relu")
         ])
