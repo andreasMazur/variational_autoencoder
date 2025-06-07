@@ -6,7 +6,7 @@ TensorFlow and Keras.
 ## Install
 
 ```bash
-  pip install git+https://github.com/andreasMazur/variational_autoencoder.git/@main
+pip install git+https://github.com/andreasMazur/variational_autoencoder.git/@main
 ```
 
 ## Example usage of a VAE
