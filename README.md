@@ -104,16 +104,18 @@ vae = CVariationalAutoEncoder(
 vae.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001))
 
 # Load data
-(train_images, _), (test_images, _) = keras.datasets.mnist.load_data()
+(train_images, train_labels), (test_images, test_labels) = keras.datasets.mnist.load_data()
 train_images = train_images / 255.0
 test_images = test_images / 255.0
 
 # Fit the VAE (training-parameters are mockup numbers)
+# Hint: Missing labels should be filled with -1.
+# This indicates the VAE to use the classifier for the associated features..
 vae.fit(
     x=train_images,
-    y=train_images,
+    y=train_labels,
     epochs=10,
     batch_size=64,
-    validation_data=(test_images, test_images)
+    validation_data=(test_images, test_labels)
 )
 ```
