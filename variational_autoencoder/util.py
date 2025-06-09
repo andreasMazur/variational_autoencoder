@@ -5,11 +5,12 @@ def analytical_kl_div(pred_mean, pred_var):
     return -(1 / 2) * tf.reduce_sum(1 + pred_var - pred_mean ** 2 - tf.math.exp(pred_var), axis=-1)
 
 
-def mean_squared_error(y_true, reconstruction):
+def mean_squared_error(y_true, reconstruction, batch_dims=1):
     # Reshape inputs to vectors
-    y_true = tf.reshape(y_true, (tf.shape(y_true)[0], -1))
-    reconstruction = tf.reshape(reconstruction, (tf.shape(reconstruction)[0], -1))
-    # First average over epsilon-samples, then compute MSE for instances in batch
+    y_true = tf.reshape(y_true, tf.concat([tf.shape(y_true)[:batch_dims], [-1]], axis=0))
+    reconstruction = tf.reshape(reconstruction, tf.concat([tf.shape(reconstruction)[:batch_dims], [-1]], axis=0))
+
+    # Compute MSE per instance in batch
     return tf.reduce_mean(tf.math.squared_difference(y_true, reconstruction), axis=-1)
 
 
