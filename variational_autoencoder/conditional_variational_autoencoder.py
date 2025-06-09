@@ -262,6 +262,7 @@ class CVariationalAutoEncoder(keras.models.Model):
         config["decoder"] = keras.utils.serialize_keras_object(self.decoder)
         config["beta"] = self.beta
         config["classifier"] = keras.utils.serialize_keras_object(self.classifier)
+        config["alpha"] = self.alpha
         return config
 
     @classmethod
@@ -272,4 +273,5 @@ class CVariationalAutoEncoder(keras.models.Model):
             decoder=keras.saving.deserialize_keras_object(config["decoder"]),
             beta=config["beta"],
             classifier=keras.saving.deserialize_keras_object(config["classifier"]),
+            alpha=config["alpha"],
         )
