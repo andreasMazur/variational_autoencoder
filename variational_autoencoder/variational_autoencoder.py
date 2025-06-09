@@ -105,8 +105,7 @@ class VariationalAutoEncoder(keras.models.Model):
         input_features, output_features = data
 
         # Forward pass
-        pred_mean, pred_log_var = self.encode(input_features)
-        reconstruction = self.decode(pred_mean, pred_log_var, training=False)
+        reconstruction, pred_mean, pred_log_var = self.call_detailed(input_features, training=False)
 
         # Compute beta-weighted, negative evidence lower bound (ELBO)
         kl_loss = self.kl_divergence(y_true=(), y_pred=(pred_mean, pred_log_var))
