@@ -36,6 +36,8 @@ class CVariationalAutoEncoder(keras.models.Model):
                  classifier,
                  alpha=0.1,
                  beta=1.,
+                 kl_divergence_loss=None,
+                 reconstruction_loss=None,
                  *args,
                  **kwargs):
         super().__init__(*args, **kwargs)
@@ -63,8 +65,10 @@ class CVariationalAutoEncoder(keras.models.Model):
 
         self.alpha = alpha
         self.beta = beta
-        self.kl_divergence = KLDivergence()
-        self.reconstruction_loss = ReconstructionLoss()
+        if kl_divergence_loss is None:
+            self.kl_divergence = KLDivergence()
+        if reconstruction_loss is None:
+            self.reconstruction_loss = ReconstructionLoss()
 
         self.recon_loss_tracker = keras.metrics.Mean(name="reconstruction_loss")
         self.kl_loss_tracker = keras.metrics.Mean(name="kl_divergence")
@@ -160,6 +164,7 @@ class CVariationalAutoEncoder(keras.models.Model):
         # Return loss for unsupervised case: E_{q(y | x)}[-L(x, y)] + H(q(y | x))
         return neg_elbo + entropy
 
+    @tf.function
     def train_step(self, data):
         input_features, labels = data
 
@@ -211,6 +216,7 @@ class CVariationalAutoEncoder(keras.models.Model):
 
         return labeled_features, given_labels, non_labeled_features
 
+    @tf.function
     def test_step(self, data):
         input_features, labels = data
 
