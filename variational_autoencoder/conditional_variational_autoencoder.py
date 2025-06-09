@@ -19,22 +19,6 @@ def divide_data(features, labels):
     return labeled_features, given_labels, non_labeled_features
 
 
-def concat_labels_to_features(features, labels):
-    # Get number of extra dimensions
-    n_dims = tf.rank(features) - 1
-
-    # Build shape for reshaping labels
-    new_shape = tf.concat([tf.shape(labels), tf.ones(n_dims, dtype=tf.int32)], axis=0)
-    labels = tf.reshape(labels, new_shape)
-
-    # Tile up to feature shape
-    multiples = tf.concat([[1], tf.shape(features)[1:]], axis=0)
-    labels = tf.tile(labels, multiples=multiples)
-
-    # Concat labels to innermost dimension of features
-    return tf.concat([features, tf.cast(labels, features.dtype)], axis=-1)
-
-
 class CVariationalAutoEncoder(keras.models.Model):
     """Conditional Variational Autoencoder (cVAE) with classifier for semi-supervised Machine Learning.
 
@@ -100,49 +84,63 @@ class CVariationalAutoEncoder(keras.models.Model):
         self.clf_loss_tracker = keras.metrics.Mean(name="classifier_loss")
         self.total_loss_tracker = keras.metrics.Mean(name="loss")
 
-    def encode(self, inputs, training=False):
-        inputs = self.encoder(inputs, training=training)
-        pred_mean = self.mean_predictor(inputs, training=training)
-        pred_log_var = self.log_var_predictor(inputs, training=training)
-        return pred_mean, pred_log_var
+    def call(self, inputs, training=False):
+        reconstructions, _, _ = self.call_detailed(inputs, training=training)
+        return reconstructions
 
-    def sample(self, pred_mean, pred_log_var, training=None):
-        if training:
-            epsilon = tf.random.normal(shape=tf.shape(pred_mean), mean=0.0, stddev=1.0)
-        else:
-            epsilon = 0.
-        return pred_mean + tf.math.exp(pred_log_var / 2) * epsilon
-
-    def decode(self, pred_mean, pred_log_var, labels, training=False):
-        samples = self.sample(pred_mean, pred_log_var, training=training)
-
-        # cVAE learns label-dependent decoder p(x | y, z) => Concat labels to features
-        return self.decoder(tf.concat([samples, tf.cast(labels[:, None], samples.dtype)], axis=-1))
-
-    def call(self, inputs, training=None):
+    def call_detailed(self, inputs, training=False):
         # Concat labels to features
         features, labels = inputs
-        c_labeled_features = concat_labels_to_features(features, labels)
+        c_labeled_features = self.concat_labels_to_features(features, labels)
 
         # Encoder of cVAE is label dependent: p(z | x, y)
         pred_mean, pred_log_var = self.encode(c_labeled_features, training=training)
 
         # Decoder of cVAE is label dependent: p(x | y, z)
         reconstruction = self.decode(pred_mean, pred_log_var, labels, training=training)
-        return reconstruction
+        return reconstruction, pred_mean, pred_log_var
 
-    def compute_labeled_loss(self, labeled_features, labels, training=True):
-        # Concatenate labels to features
-        c_labeled_features = concat_labels_to_features(labeled_features, labels)
+    def concat_labels_to_features(self, features, labels):
+        # Get number of extra dimensions
+        n_dims = tf.rank(features) - 1
 
-        # Encoder of cVAE is label dependent: p(z | x, y)  - 'c_labeled_features' has labels concatenated to it.
-        pred_mean, pred_log_var = self.encode(c_labeled_features, training=training)
-        reconstruction = self.decode(pred_mean, pred_log_var, labels, training=training)
+        # Build shape for reshaping labels
+        new_shape = tf.concat([tf.shape(labels), tf.ones(n_dims, dtype=tf.int32)], axis=0)
+        labels = tf.reshape(labels, new_shape)
+
+        # Tile up to feature shape
+        multiples = tf.concat([[1], tf.shape(features)[1:]], axis=0)
+        labels = tf.tile(labels, multiples=multiples)
+
+        # Concat labels to innermost dimension of features
+        return tf.concat([features, tf.cast(labels, features.dtype)], axis=-1)
+
+    def encode(self, inputs, training=False):
+        inputs = self.encoder(inputs, training=training)
+        pred_mean = self.mean_predictor(inputs, training=training)
+        pred_log_var = self.log_var_predictor(inputs, training=training)
+        return pred_mean, pred_log_var
+
+    def decode(self, pred_mean, pred_log_var, labels, training=False):
+        samples = self.sample(pred_mean, pred_log_var, training=training)
+
+        # cVAE learns label-dependent decoder p(x | y, z) => Concat labels to features
+        return self.decoder(tf.concat([samples, tf.cast(labels[:, None], samples.dtype)], axis=-1), training=training)
+
+    def sample(self, pred_mean, pred_log_var, training=False):
+        if training:
+            epsilon = tf.random.normal(shape=tf.shape(pred_mean), mean=0.0, stddev=1.0)
+        else:
+            epsilon = 0.
+        return pred_mean + tf.math.exp(pred_log_var / 2) * epsilon
+
+    def compute_labeled_loss(self, features, labels, training=True):
+        reconstruction, pred_mean, pred_log_var = self.call_detailed((features, labels), training=training)
 
         # Compute beta-weighted, negative evidence lower bound (ELBO)
         kl_loss = self.kl_divergence.call(y_true=(), y_pred=(pred_mean, pred_log_var), reduce_sum=False)
         recon_loss = self.reconstruction_loss.call(
-            y_true=tf.cast(labeled_features, reconstruction.dtype), y_pred=reconstruction, reduce_sum=False
+            y_true=tf.cast(features, reconstruction.dtype), y_pred=reconstruction, reduce_sum=False
         )
 
         # Update tracker
@@ -173,7 +171,7 @@ class CVariationalAutoEncoder(keras.models.Model):
         entropy = compute_entropy(prediction)
 
         # Return loss for unsupervised case: E_{q(y | x)}[-L(x, y)] + H(q(y | x))
-        return tf.reduce_sum(neg_elbo + entropy)
+        return neg_elbo + entropy
 
     def train_step(self, data):
         input_features, labels = data
@@ -186,7 +184,7 @@ class CVariationalAutoEncoder(keras.models.Model):
             labeled_loss = tf.reduce_sum(self.compute_labeled_loss(labeled_features, labels, training=True))
 
             # 2.) Compute loss for features with no labels and classification loss
-            unlabeled_loss = self.compute_unlabeled_loss(non_labeled_features, training=True)
+            unlabeled_loss = tf.reduce_sum(self.compute_unlabeled_loss(non_labeled_features, training=True))
 
             # 3.) Compute classification loss on labeled data
             predictions = self.classifier(labeled_features, training=True)
@@ -218,7 +216,7 @@ class CVariationalAutoEncoder(keras.models.Model):
         labeled_loss = tf.reduce_sum(self.compute_labeled_loss(labeled_features, labels, training=False))
 
         # 2.) Compute loss for features with no labels
-        unlabeled_loss = self.compute_unlabeled_loss(non_labeled_features, training=False)
+        unlabeled_loss = tf.reduce_sum(self.compute_unlabeled_loss(non_labeled_features, training=False))
 
         # 3.) Compute classification loss on labeled data
         predictions = self.classifier(labeled_features, training=False)
