@@ -50,34 +50,37 @@ class VariationalAutoEncoder(keras.models.Model):
         self.kl_loss_tracker = keras.metrics.Mean(name="kl_divergence")
         self.recon_loss_tracker = keras.metrics.Mean(name="reconstruction_loss")
 
-    def encode(self, inputs):
-        inputs = self.encoder(inputs)
-        pred_mean = self.mean_predictor(inputs)
-        pred_log_var = self.log_var_predictor(inputs)
+    def call(self, inputs, training=False):
+        reconstruction, _, _ = self.call_detailed(inputs, training=True)
+        return reconstruction
+
+    def call_detailed(self, inputs, training=False):
+        pred_mean, pred_log_var = self.encode(inputs, training=training)
+        reconstruction = self.decode(pred_mean, pred_log_var, training=training)
+        return reconstruction, pred_mean, pred_log_var
+
+    def encode(self, inputs, training=False):
+        inputs = self.encoder(inputs, training=training)
+        pred_mean = self.mean_predictor(inputs, training=training)
+        pred_log_var = self.log_var_predictor(inputs, training=training)
         return pred_mean, pred_log_var
 
-    def sample(self, pred_mean, pred_log_var, training=None):
+    def decode(self, pred_mean, pred_log_var, training=False):
+        samples = self.sample(pred_mean, pred_log_var, training=training)
+        return self.decoder(samples)
+
+    def sample(self, pred_mean, pred_log_var, training=False):
         if training:
             epsilon = tf.random.normal(shape=tf.shape(pred_mean), mean=0.0, stddev=1.0)
         else:
             epsilon = 0.
         return pred_mean + tf.math.exp(pred_log_var / 2) * epsilon
 
-    def decode(self, pred_mean, pred_log_var, training=None):
-        samples = self.sample(pred_mean, pred_log_var, training=training)
-        return self.decoder(samples)
-
-    def call(self, inputs, training=None):
-        pred_mean, pred_log_var = self.encode(inputs)
-        reconstruction = self.decode(pred_mean, pred_log_var, training=training)
-        return reconstruction
-
     def train_step(self, data):
         input_features, output_features = data
         with tf.GradientTape() as tape:
             # Forward pass
-            pred_mean, pred_log_var = self.encode(input_features)
-            reconstruction = self.decode(pred_mean, pred_log_var, training=True)
+            reconstruction, pred_mean, pred_log_var = self.call_detailed(input_features, training=True)
 
             # Compute beta-weighted, negative evidence lower bound (ELBO)
             kl_loss = self.kl_divergence(y_true=(), y_pred=(pred_mean, pred_log_var))

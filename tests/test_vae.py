@@ -46,7 +46,7 @@ class TestVAE(unittest.TestCase):
         self.vae.fit(
             x=self.train_images,
             y=self.train_images,
-            epochs=1,
+            epochs=10,
             batch_size=64,
             validation_data=(self.test_images, self.test_images)
         )
