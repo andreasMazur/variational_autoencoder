@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow as tf
 
 
-class TestVAE(unittest.TestCase):
+class TestCVAE(unittest.TestCase):
     def setUp(self):
         # Load data
         (train_images, train_labels), (test_images, test_labels) = keras.datasets.mnist.load_data()
