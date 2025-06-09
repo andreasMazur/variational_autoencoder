@@ -6,19 +6,6 @@ import tensorflow as tf
 import keras
 
 
-def divide_data(features, labels):
-    # Get set of features with labels
-    indices = tf.where(labels != -1)
-    labeled_features = tf.gather_nd(features, indices)
-    given_labels = tf.gather_nd(labels, indices)
-
-    # Get set of features without labels
-    indices = tf.where(labels == -1)
-    non_labeled_features = tf.gather_nd(features, indices)
-
-    return labeled_features, given_labels, non_labeled_features
-
-
 class CVariationalAutoEncoder(keras.models.Model):
     """Conditional Variational Autoencoder (cVAE) with classifier for semi-supervised Machine Learning.
 
@@ -177,7 +164,7 @@ class CVariationalAutoEncoder(keras.models.Model):
         input_features, labels = data
 
         # Filter for given and non-given labels
-        labeled_features, labels, non_labeled_features = divide_data(input_features, labels)
+        labeled_features, labels, non_labeled_features = self.divide_data(input_features, labels)
 
         with tf.GradientTape() as tape:
             # 1.) Compute loss for features where labels are given
@@ -206,11 +193,23 @@ class CVariationalAutoEncoder(keras.models.Model):
             "classifier_loss": self.clf_loss_tracker.result()
         }
 
+    def divide_data(self, features, labels):
+        # Get set of features with labels
+        indices = tf.where(labels != -1)
+        labeled_features = tf.gather_nd(features, indices)
+        given_labels = tf.gather_nd(labels, indices)
+
+        # Get set of features without labels
+        indices = tf.where(labels == -1)
+        non_labeled_features = tf.gather_nd(features, indices)
+
+        return labeled_features, given_labels, non_labeled_features
+
     def test_step(self, data):
         input_features, labels = data
 
         # Filter for given and non-given labels
-        labeled_features, labels, non_labeled_features = divide_data(input_features, labels)
+        labeled_features, labels, non_labeled_features = self.divide_data(input_features, labels)
 
         # 1.) Compute loss for features where labels are given
         labeled_loss = tf.reduce_sum(self.compute_labeled_loss(labeled_features, labels, training=False))
