@@ -168,10 +168,16 @@ class CVariationalAutoEncoder(keras.models.Model):
 
         with tf.GradientTape() as tape:
             # 1.) Compute loss for features where labels are given
-            labeled_loss = tf.reduce_sum(self.compute_labeled_loss(labeled_features, labels, training=True))
+            if tf.shape(labeled_features)[0] > 0:
+                labeled_loss = tf.reduce_sum(self.compute_labeled_loss(labeled_features, labels, training=True))
+            else:
+                labeled_loss = 0.0
 
             # 2.) Compute loss for features with no labels and classification loss
-            unlabeled_loss = tf.reduce_sum(self.compute_unlabeled_loss(non_labeled_features, training=True))
+            if tf.shape(non_labeled_features)[0] > 0:
+                unlabeled_loss = tf.reduce_sum(self.compute_unlabeled_loss(non_labeled_features, training=True))
+            else:
+                unlabeled_loss = 0.0
 
             # 3.) Compute classification loss on labeled data
             predictions = self.classifier(labeled_features, training=True)
@@ -212,10 +218,16 @@ class CVariationalAutoEncoder(keras.models.Model):
         labeled_features, labels, non_labeled_features = self.divide_data(input_features, labels)
 
         # 1.) Compute loss for features where labels are given
-        labeled_loss = tf.reduce_sum(self.compute_labeled_loss(labeled_features, labels, training=False))
+        if tf.shape(labeled_features)[0] > 0:
+            labeled_loss = tf.reduce_sum(self.compute_labeled_loss(labeled_features, labels, training=True))
+        else:
+            labeled_loss = 0.0
 
-        # 2.) Compute loss for features with no labels
-        unlabeled_loss = tf.reduce_sum(self.compute_unlabeled_loss(non_labeled_features, training=False))
+        # 2.) Compute loss for features with no labels and classification loss
+        if tf.shape(non_labeled_features)[0] > 0:
+            unlabeled_loss = tf.reduce_sum(self.compute_unlabeled_loss(non_labeled_features, training=True))
+        else:
+            unlabeled_loss = 0.0
 
         # 3.) Compute classification loss on labeled data
         predictions = self.classifier(labeled_features, training=False)
