@@ -17,18 +17,22 @@ class TestCVAE(unittest.TestCase):
         self.test_labels = test_labels
 
         # Initialize encoder architecture
-        latent_dim = 64
+        latent_dim = 2
         encoder = keras.Sequential([
+            keras.layers.InputLayer(input_shape=(28, 28, 2)),  # Input features: grey-scale image and label
+            keras.layers.Conv2D(filters=32, kernel_size=3, strides=(2, 2), activation='relu'),
+            keras.layers.Conv2D(filters=64, kernel_size=3, strides=(2, 2), activation='relu'),
             keras.layers.Flatten(),
-            keras.layers.Dense(128, activation="relu"),
-            keras.layers.Dense(latent_dim, activation="relu")
         ])
 
         # Initialize decoder architecture
         decoder = keras.Sequential([
-            keras.layers.Dense(128, activation="relu"),
-            keras.layers.Dense(28 * 28, activation="sigmoid"),
-            keras.layers.Reshape((28, 28, 1))
+            keras.layers.InputLayer(input_shape=(latent_dim + 1,)),  # Input features: latent vector and label
+            keras.layers.Dense(units=7 * 7 * 32, activation="relu"),
+            keras.layers.Reshape(target_shape=(7, 7, 32)),
+            keras.layers.Conv2DTranspose(filters=64, kernel_size=3, strides=2, padding='same', activation='relu'),
+            keras.layers.Conv2DTranspose(filters=32, kernel_size=3, strides=2, padding='same', activation='relu'),
+            keras.layers.Conv2DTranspose(filters=1, kernel_size=3, strides=1, padding='same'),
         ])
 
         # Initialize classifier
