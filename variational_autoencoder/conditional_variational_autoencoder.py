@@ -75,6 +75,9 @@ class CVariationalAutoEncoder(keras.models.Model):
         self.clf_loss_tracker = keras.metrics.Mean(name="classifier_loss")
         self.total_loss_tracker = keras.metrics.Mean(name="loss")
 
+        self.training_steps = 0
+        self.warmup_steps = 300
+
     def call(self, inputs, training=False):
         reconstructions, _, _ = self.call_detailed(inputs, training=training)
         return reconstructions
@@ -138,7 +141,12 @@ class CVariationalAutoEncoder(keras.models.Model):
         self.kl_loss_tracker.update_state(tf.reduce_sum(kl_loss))
         self.recon_loss_tracker.update_state(tf.reduce_sum(recon_loss))
 
-        return self.beta * kl_loss + recon_loss
+        coeff = self.training_steps / self.warmup_steps if self.training_steps < self.warmup_steps else 1.0
+        self.training_steps = (
+            self.training_steps + 1 if self.training_steps < self.warmup_steps else self.training_steps
+        )
+
+        return coeff * self.beta * kl_loss + recon_loss
 
     def compute_unlabeled_loss(self, non_labeled_features, training=True):
         # Estimate labels using a classifier: q(y | x)
