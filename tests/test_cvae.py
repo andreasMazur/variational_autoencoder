@@ -74,7 +74,7 @@ class TestCVAE(unittest.TestCase):
         )
 
         # Save model
-        model_path = "./vae_test_model.keras"
+        model_path = "./cvae_test_model.keras"
         self.vae.save(model_path)
 
         # Load model
@@ -84,11 +84,11 @@ class TestCVAE(unittest.TestCase):
         )
 
         # Check if the model can be used after loading
-        _, means, _ = self.vae.call_detailed((self.train_images[:1000], self.train_labels[:1000]))
-        plt.scatter(means[:, 0], means[:, 1])
+        _, means, _ = self.vae.call_detailed((self.train_images[:1000], self.train_labels[:1000]), training=False)
+        cmap = plt.get_cmap("tab10")
+        colors = cmap(self.train_labels[:1000])
+        plt.scatter(means[:, 0], means[:, 1], c=colors)
         plt.xlabel("Embedding Dimension 1")
         plt.ylabel("Embedding Dimension 2")
         plt.grid()
         plt.show()
-
-        os.remove(model_path)
