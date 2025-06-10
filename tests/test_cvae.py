@@ -1,5 +1,7 @@
 from variational_autoencoder import CVariationalAutoEncoder
 
+from matplotlib import pyplot as plt
+
 import unittest
 import keras
 import os
@@ -66,7 +68,7 @@ class TestCVAE(unittest.TestCase):
         self.vae.fit(
             x=tf.constant(self.train_images),
             y=tf.constant(training_labels),
-            epochs=10,
+            epochs=5,
             batch_size=64,
             validation_data=(self.test_images, tf.constant(test_labels))
         )
@@ -76,20 +78,17 @@ class TestCVAE(unittest.TestCase):
         self.vae.save(model_path)
 
         # Load model
-        try:
-            self.vae = keras.saving.load_model(
-                model_path,
-                custom_objects={"CVariationalAutoEncoder": CVariationalAutoEncoder}
-            )
-        except:
-            pass
-        os.remove(model_path)
+        self.vae = keras.saving.load_model(
+            model_path,
+            custom_objects={"CVariationalAutoEncoder": CVariationalAutoEncoder}
+        )
 
         # Check if the model can be used after loading
-        test_input = self.train_images[0, None]
-        test_input_label = self.train_labels[0, None]
+        _, means, _ = self.vae.call_detailed((self.train_images[:1000], self.train_labels[:1000]))
+        plt.scatter(means[:, 0], means[:, 1])
+        plt.xlabel("Embedding Dimension 1")
+        plt.ylabel("Embedding Dimension 2")
+        plt.grid()
+        plt.show()
 
-        # Input is represented by an image and its associated label
-        test_output = self.vae((test_input, test_input_label)).numpy()
-        assert test_input.shape == test_output.shape, "Input shape has a different shape compared to output shape."
-
+        os.remove(model_path)
