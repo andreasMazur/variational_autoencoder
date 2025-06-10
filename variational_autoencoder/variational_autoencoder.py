@@ -92,7 +92,9 @@ class VariationalAutoEncoder(keras.models.Model):
             recon_loss = self.reconstruction_loss(y_true=output_features, y_pred=reconstruction)
 
             coeff = self.training_steps / self.warmup_steps if self.training_steps < self.warmup_steps else 1.0
-            self.training_steps = self.training_steps + 1 if self.training_steps < self.warmup_steps else self.training_steps
+            self.training_steps = (
+                self.training_steps + 1 if self.training_steps < self.warmup_steps else self.training_steps
+            )
 
             total_loss = coeff * self.beta * kl_loss + recon_loss
 
