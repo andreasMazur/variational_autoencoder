@@ -60,16 +60,16 @@ class TestVAE(unittest.TestCase):
 
     def test_model_loading(self):
         """Test whether VAE can be loaded after being stored"""
-        # self.vae.fit(
-        #     x=self.train_images,
-        #     y=self.train_images,
-        #     epochs=10,
-        #     batch_size=64,
-        #     validation_data=(self.test_images, self.test_images)
-        # )
-        # # Save model
+        self.vae.fit(
+            x=self.train_images,
+            y=self.train_images,
+            epochs=10,
+            batch_size=64,
+            validation_data=(self.test_images, self.test_images)
+        )
+        # Save model
         model_path = "./vae_test_model.keras"
-        # self.vae.save(model_path)
+        self.vae.save(model_path)
 
         # Load model
         self.vae = keras.saving.load_model(

@@ -23,7 +23,7 @@ class VariationalAutoEncoder(keras.models.Model):
     beta : float
         A regularization coefficient for the KL-divergence loss.
     """
-    def __init__(self, encoder, latent_dim, decoder, beta=1., *args, **kwargs):
+    def __init__(self, encoder, latent_dim, decoder, beta=1., warmup_steps=300, training_steps=0, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Initialize encoder and decoder
         self.encoder = encoder
@@ -50,8 +50,9 @@ class VariationalAutoEncoder(keras.models.Model):
         self.kl_loss_tracker = keras.metrics.Mean(name="kl_divergence")
         self.recon_loss_tracker = keras.metrics.Mean(name="reconstruction_loss")
 
-        self.training_steps = 0
-        self.warmup_steps = 300
+        # Warmup attributes
+        self.training_steps = training_steps
+        self.warmup_steps = warmup_steps
 
     def call(self, inputs, training=False):
         reconstruction, _, _ = self.call_detailed(inputs, training=True)
@@ -140,6 +141,8 @@ class VariationalAutoEncoder(keras.models.Model):
         config["latent_dim"] = self.latent_dim
         config["decoder"] = keras.utils.serialize_keras_object(self.decoder)
         config["beta"] = self.beta
+        config["warmup_steps"] = self.warmup_steps
+        config["training_steps"] = self.training_steps
         return config
 
     @classmethod
@@ -149,4 +152,6 @@ class VariationalAutoEncoder(keras.models.Model):
             latent_dim=config["latent_dim"],
             decoder=keras.saving.deserialize_keras_object(config["decoder"]),
             beta=config["beta"],
+            warmup_steps=config["warmup_steps"],
+            training_steps=config["training_steps"]
         )
