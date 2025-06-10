@@ -50,6 +50,9 @@ class VariationalAutoEncoder(keras.models.Model):
         self.kl_loss_tracker = keras.metrics.Mean(name="kl_divergence")
         self.recon_loss_tracker = keras.metrics.Mean(name="reconstruction_loss")
 
+        self.training_steps = 0
+        self.warmup_steps = 300
+
     def call(self, inputs, training=False):
         reconstruction, _, _ = self.call_detailed(inputs, training=True)
         return reconstruction
@@ -85,7 +88,11 @@ class VariationalAutoEncoder(keras.models.Model):
             # Compute beta-weighted, negative evidence lower bound (ELBO)
             kl_loss = self.kl_divergence(y_true=(), y_pred=(pred_mean, pred_log_var))
             recon_loss = self.reconstruction_loss(y_true=output_features, y_pred=reconstruction)
-            total_loss = self.beta * kl_loss + recon_loss
+
+            coeff = self.training_steps / self.warmup_steps if self.training_steps < self.warmup_steps else 1.0
+            self.training_steps = self.training_steps + 1 if self.training_steps < self.warmup_steps else self.training_steps
+
+            total_loss = coeff * self.beta * kl_loss + recon_loss
 
         grads = tape.gradient(total_loss, self.trainable_variables)
         self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
