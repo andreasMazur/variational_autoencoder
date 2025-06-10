@@ -38,6 +38,8 @@ class CVariationalAutoEncoder(keras.models.Model):
                  beta=1.,
                  kl_divergence_loss=None,
                  reconstruction_loss=None,
+                 warmup_steps=300,
+                 training_steps=0,
                  *args,
                  **kwargs):
         super().__init__(*args, **kwargs)
@@ -75,8 +77,8 @@ class CVariationalAutoEncoder(keras.models.Model):
         self.clf_loss_tracker = keras.metrics.Mean(name="classifier_loss")
         self.total_loss_tracker = keras.metrics.Mean(name="loss")
 
-        self.training_steps = 0
-        self.warmup_steps = 300
+        self.training_steps = training_steps
+        self.warmup_steps = warmup_steps
 
     def call(self, inputs, training=False):
         reconstructions, _, _ = self.call_detailed(inputs, training=training)
@@ -271,6 +273,8 @@ class CVariationalAutoEncoder(keras.models.Model):
         config["beta"] = self.beta
         config["classifier"] = keras.utils.serialize_keras_object(self.classifier)
         config["alpha"] = self.alpha
+        config["warmup_steps"] = self.warmup_steps
+        config["training_steps"] = self.training_steps
         return config
 
     @classmethod
@@ -282,4 +286,6 @@ class CVariationalAutoEncoder(keras.models.Model):
             beta=config["beta"],
             classifier=keras.saving.deserialize_keras_object(config["classifier"]),
             alpha=config["alpha"],
+            warmup_steps=config["warmup_steps"],
+            training_steps=config["training_steps"]
         )
