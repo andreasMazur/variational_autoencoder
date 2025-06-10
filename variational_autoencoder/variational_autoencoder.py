@@ -80,6 +80,7 @@ class VariationalAutoEncoder(keras.models.Model):
             epsilon = 0.
         return pred_mean + tf.math.exp(pred_log_var / 2) * epsilon
 
+    @tf.function
     def train_step(self, data):
         input_features, output_features = data
         with tf.GradientTape() as tape:
@@ -109,6 +110,7 @@ class VariationalAutoEncoder(keras.models.Model):
             "reconstruction_loss": recon_loss,
         }
 
+    @tf.function
     def test_step(self, data):
         input_features, output_features = data
 
