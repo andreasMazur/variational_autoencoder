@@ -23,7 +23,17 @@ class VariationalAutoEncoder(keras.models.Model):
     beta : float
         A regularization coefficient for the KL-divergence loss.
     """
-    def __init__(self, encoder, latent_dim, decoder, beta=1., warmup_steps=300, training_steps=0, *args, **kwargs):
+    def __init__(self,
+                 encoder,
+                 latent_dim,
+                 decoder,
+                 beta=1.,
+                 warmup_steps=300,
+                 training_steps=0,
+                 mean_predictor=None,
+                 log_var_predictor=None,
+                 *args,
+                 **kwargs):
         super().__init__(*args, **kwargs)
         # Initialize encoder and decoder
         self.encoder = encoder
@@ -31,16 +41,22 @@ class VariationalAutoEncoder(keras.models.Model):
 
         # Initialize bottleneck
         self.latent_dim = latent_dim
-        self.mean_predictor = keras.layers.Dense(
-            self.latent_dim,
-            activation="linear",
-            name="mean_predictor"
-        )
-        self.log_var_predictor = keras.layers.Dense(
-            self.latent_dim,
-            activation="linear",
-            name="log_std_predictor"
-        )
+        if mean_predictor is None:
+            self.mean_predictor = keras.layers.Dense(
+                self.latent_dim,
+                activation="linear",
+                name="mean_predictor"
+            )
+        else:
+            self.mean_predictor = mean_predictor
+        if log_var_predictor is None:
+            self.log_var_predictor = keras.layers.Dense(
+                self.latent_dim,
+                activation="linear",
+                name="log_std_predictor"
+            )
+        else:
+            self.log_var_predictor = log_var_predictor
 
         self.beta = beta
         self.kl_divergence = KLDivergence()
@@ -147,6 +163,8 @@ class VariationalAutoEncoder(keras.models.Model):
         config["beta"] = self.beta
         config["warmup_steps"] = self.warmup_steps
         config["training_steps"] = self.training_steps
+        config["mean_predictor"] = keras.utils.serialize_keras_object(self.mean_predictor)
+        config["log_var_predictor"] = keras.utils.serialize_keras_object(self.log_var_predictor)
         return config
 
     @classmethod
@@ -157,5 +175,7 @@ class VariationalAutoEncoder(keras.models.Model):
             decoder=keras.saving.deserialize_keras_object(config["decoder"]),
             beta=config["beta"],
             warmup_steps=config["warmup_steps"],
-            training_steps=config["training_steps"]
+            training_steps=config["training_steps"],
+            mean_predictor=keras.saving.deserialize_keras_object(config["mean_predictor"]),
+            log_var_predictor=keras.saving.deserialize_keras_object(config["log_var_predictor"]),
         )

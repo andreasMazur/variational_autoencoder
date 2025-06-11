@@ -40,6 +40,8 @@ class CVariationalAutoEncoder(keras.models.Model):
                  reconstruction_loss=None,
                  warmup_steps=300,
                  training_steps=0,
+                 mean_predictor=None,
+                 log_var_predictor=None,
                  *args,
                  **kwargs):
         super().__init__(*args, **kwargs)
@@ -50,16 +52,22 @@ class CVariationalAutoEncoder(keras.models.Model):
 
         # Initialize bottleneck
         self.latent_dim = latent_dim
-        self.mean_predictor = keras.layers.Dense(
-            self.latent_dim,
-            activation="linear",
-            name="mean_predictor"
-        )
-        self.log_var_predictor = keras.layers.Dense(
-            self.latent_dim,
-            activation="linear",
-            name="log_std_predictor"
-        )
+        if mean_predictor is None:
+            self.mean_predictor = keras.layers.Dense(
+                self.latent_dim,
+                activation="linear",
+                name="mean_predictor"
+            )
+        else:
+            self.mean_predictor = mean_predictor
+        if log_var_predictor is None:
+            self.log_var_predictor = keras.layers.Dense(
+                self.latent_dim,
+                activation="linear",
+                name="log_std_predictor"
+            )
+        else:
+            self.log_var_predictor = log_var_predictor
 
         self.classification_loss = keras.losses.SparseCategoricalCrossentropy(
             from_logits=True, reduction="sum_over_batch_size"
@@ -275,6 +283,8 @@ class CVariationalAutoEncoder(keras.models.Model):
         config["alpha"] = self.alpha
         config["warmup_steps"] = self.warmup_steps
         config["training_steps"] = self.training_steps
+        config["mean_predictor"] = keras.utils.serialize_keras_object(self.mean_predictor)
+        config["log_var_predictor"] = keras.utils.serialize_keras_object(self.log_var_predictor)
         return config
 
     @classmethod
@@ -287,5 +297,7 @@ class CVariationalAutoEncoder(keras.models.Model):
             classifier=keras.saving.deserialize_keras_object(config["classifier"]),
             alpha=config["alpha"],
             warmup_steps=config["warmup_steps"],
-            training_steps=config["training_steps"]
+            training_steps=config["training_steps"],
+            mean_predictor=keras.saving.deserialize_keras_object(config["mean_predictor"]),
+            log_var_predictor=keras.saving.deserialize_keras_object(config["log_var_predictor"]),
         )
