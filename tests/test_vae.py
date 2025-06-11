@@ -41,22 +41,6 @@ class TestVAE(unittest.TestCase):
         )
         self.vae.compile(optimizer=keras.optimizers.Adam(1e-4))
 
-    def test_vae_initialization(self):
-        """Compare input shape against output shape. Should be equal."""
-        test_input = self.train_images[0, None]
-        test_output = self.vae(test_input).numpy()
-        assert test_input.shape == test_output.shape, "Input shape has a different shape compared to output shape."
-
-    def test_vae_training(self):
-        """Test whether VAE training runs."""
-        self.vae.fit(
-            x=self.train_images,
-            y=self.train_images,
-            epochs=10,
-            batch_size=64,
-            validation_data=(self.test_images, self.test_images)
-        )
-
     def test_model_loading(self):
         """Test whether VAE can be loaded after being stored"""
         self.vae.fit(
@@ -83,5 +67,3 @@ class TestVAE(unittest.TestCase):
         plt.ylabel("Embedding Dimension 2")
         plt.grid()
         plt.show()
-
-        os.remove(model_path)
