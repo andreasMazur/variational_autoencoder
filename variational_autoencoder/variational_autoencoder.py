@@ -137,7 +137,7 @@ class VariationalAutoEncoder(keras.models.Model):
 
         # Compute beta-weighted, negative evidence lower bound (ELBO)
         kl_loss = self.kl_divergence(y_true=(), y_pred=(pred_mean, pred_log_var))
-        recon_loss = self.reconstruction_loss(y_true=output_features, y_pred=reconstruction)
+        recon_loss = self.reconstruction_loss(y_true=input_features, y_pred=reconstruction)
         total_loss = self.beta * kl_loss + recon_loss
 
         # Update tracker
