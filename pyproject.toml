@@ -7,7 +7,8 @@ name = "variational_autoencoder"
 version = "0.0.1"
 dependencies = [
     "tensorflow",
-    "keras"
+    "keras",
+    "matplotlib"
 ]
 authors = [{name = "Andreas Mazur"}]
 maintainers = [{name = "Andreas Mazur"}]

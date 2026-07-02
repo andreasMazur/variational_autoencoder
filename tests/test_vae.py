@@ -61,9 +61,12 @@ class TestVAE(unittest.TestCase):
         )
 
         # Check if the model can be used after loading
-        _, means, _ = self.vae.call_detailed(self.train_images[:1000])
+        reconstruction, means, _ = self.vae.call_detailed(self.train_images[:1000])
         plt.scatter(means[:, 0], means[:, 1])
         plt.xlabel("Embedding Dimension 1")
         plt.ylabel("Embedding Dimension 2")
         plt.grid()
+        plt.show()
+
+        plt.imshow(reconstruction[0])
         plt.show()
