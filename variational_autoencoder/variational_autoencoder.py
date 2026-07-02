@@ -71,7 +71,7 @@ class VariationalAutoEncoder(keras.models.Model):
         self.warmup_steps = warmup_steps
 
     def call(self, inputs, training=False):
-        reconstruction, _, _ = self.call_detailed(inputs, training=True)
+        reconstruction, _, _ = self.call_detailed(inputs, training=training)
         return reconstruction
 
     def call_detailed(self, inputs, training=False):
